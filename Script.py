@@ -116,6 +116,11 @@ pred.describe
 pred_temp_amount = loaded_model.predict(prediction)
 pred_temp_amount
 
+import pickle
+filename = 'temp_amount_prediction.pk'
+
+with open('C:/Users/ds46394/Downloads/'+filename, 'wb') as file:
+    pickle.dump(loaded_model, file)
 
 
 
