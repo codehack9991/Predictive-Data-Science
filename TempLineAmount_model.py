@@ -98,3 +98,81 @@ with open('C:/Users/ds46394/Downloads/'+predictor, 'rb') as file:
 predictions = loaded_model.predict(x_test)
 # for i in range(0, len(predictions)):
 #     print predictions['i']
+
+predictions = pd.DataFrame(predictions, columns = ['TempLineAmount'])
+predictions.TempLineAmount.unique()
+date_sort = credit_x['CHDate'] == 736481
+date_sort = credit_x.loc[credit_x['CHDate'] == 736481]
+date_sort
+credit_x.columns
+
+import matplotlib.pyplot as plt
+import pandas as pd
+%matplotlib inline
+df = pd.ExcelFile(r'C:\Users\ds46394\Downloads\CreditStats_data.xlsx', parse_dates=[['Date', 'Time']])
+df = df.parse('x_train1')
+df.dtypes
+df['CHDate'] = pd.to_datetime(df.CHDate , format = '%d/%m/%Y %H.%M.%S')
+df.dtypes
+data = df.drop(['CHDate'], axis=1)
+data.index = df.CHDate
+data[300:400]
+data.fillna(0)
+
+from statsmodels.tsa.vector_ar.vecm import coint_johansen
+data = data.drop(['GFPID','ParentDescription'], axis = 1)
+data = data.drop(['OnExTotalRiskAmount','OffExTotalRiskAmount','GTotalTempLine','OnExGTotalRiskAmount','OffExGTotalRiskAmount','TotalTempLineParent'], axis = 1)
+data = data.drop(['TotalTempLineAmount','LineID'], axis = 1)
+data.dropna(inplace=True)
+data[1000:1005]
+coint_johansen(data,-1,1).eig
+
+from sklearn import preprocessing
+min_max_scaler = preprocessing.MinMaxScaler()
+np_scaled = min_max_scaler.fit_transform(data)
+df = pd.DataFrame(np_scaled)
+df
+#creating the train and validation set
+train = data[:int(0.8*(len(df)))]
+valid = data[int(0.8*(len(data))):]
+
+#fit the model
+from statsmodels.tsa.vector_ar.var_model import VAR
+model = VAR(endog=train)
+model_fit = model.fit()
+# make prediction on validation
+prediction = model_fit.forecast(model_fit.y, steps=len(valid))
+prediction
+cols = data.columns
+#converting predictions to dataframe
+pred = pd.DataFrame(index=range(0,len(prediction)),columns=[cols])
+for j in range(0,6):
+    for i in range(0, len(prediction)):
+       pred.iloc[i][j] = prediction[i][j]
+pred.describe
+
+from sklearn.metrics import r2_score
+test_score = r2_score(valid, pred)
+test_score
+
+import numpy as np
+def mean_absolute_percentage_error(y_true, y_pred): 
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+
+
+#check rmse
+
+from math import *
+from sklearn.metrics import *
+
+for i in cols:
+    print('rmse value for', i, 'is : ', sqrt(mean_squared_error(pred[i], valid[i])))
+for i in cols:
+    print('mape value for', i, 'is : ', sqrt(mean_absolute_percentage_error(valid[i],pred[i])))
+
+#make final predictions
+model = VAR(endog=data)
+model_fit = model.fit()
+yhat = model_fit.forecast(model_fit.y, steps=1)
+print(yhat)
