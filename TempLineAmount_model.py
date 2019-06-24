@@ -23,3 +23,30 @@ for i in range(0, len(credit_x['CHDate'])):
     chdate_x.append(t)
 credit_x = credit_x.assign(CHDate = chdate_x)
 print (credit_x)
+credit_x[300:400]
+credit_x.corr()
+
+import numpy as np
+corr = np.corrcoef(credit_x[0:10000], rowvar = 0)
+w,v = np.linalg.eig(corr)
+print (w)
+
+credit_x = credit_x.drop(['Ctry_Code','GroupNo'], axis = 1)
+credit_x.dtypes
+credit_x = credit_x.drop(['OnExGTotalRiskAmount','OffExGTotalRiskAmount','GTotalTempLine'], axis = 1)
+credit_x['CHDate'] = credit_x['CHDate'].astype('float64')
+credit_x['TotalTempLineParent'] = credit_x['TotalTempLineParent'].astype('float64')
+df_x = credit_x.drop(['TotalTempLineAmount'], axis = 1)
+df_y = credit_x.TotalTempLineAmount
+df_y = pd.DataFrame(df_y, columns = ['TotalTempLineAmount'], index = df_x.index.values)
+
+from sklearn.model_selection import train_test_split
+credit_x.dtypes
+df_x = credit_x.drop(['TotalTempLineAmount','Line_ID','CountryDesc'], axis = 1)
+df_x.dtypes
+df_y = credit_x.TotalTempLineAmount
+df_y = pd.DataFrame(df_y, columns = ['TotalTempLineAmount'], index = df_x.index.values)
+
+x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size = 0.3, random_state = 9)
+print(x_test)
+
